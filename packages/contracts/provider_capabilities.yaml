@@ -1,0 +1,44 @@
+# Provider Capabilities Schema for Streaming-SAS
+
+ProviderCapabilities:
+  type: object
+  properties:
+    supported_task_types:
+      type: array
+      items:
+        type: string
+        enum: ["anonymize", "convert"]
+      description: "Task types this provider can handle."
+    supported_modes:
+      type: array
+      items:
+        type: string
+        enum: ["streaming", "non_streaming"]
+      description: "What processing modes are available."
+    supported_devices:
+      type: array
+      items:
+        type: string
+        enum: ["cpu", "remote_gpu"]
+      description: "Allowed execution devices."
+    meta:
+      type: object
+      properties:
+        sample_rate:
+          type: integer
+          description: "Supported audio sample rate."
+        codecs:
+          type: array
+          items:
+            type: string
+          description: "Audio codecs supported by this provider."
+        chunk_size:
+          type: integer
+          description: "Maximum chunk size in bytes."
+        latency:
+          type: number
+          description: "Expected provider latency in milliseconds."
+        device_info:
+          type: string
+          description: "Details of the device, including implementation specifics."
+  required: ["supported_task_types", "supported_modes", "supported_devices", "meta"]

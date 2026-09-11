@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "streaming-sas"
+version = "0.1.0"
+description = "Speech transformation platform for anonymization and voice conversion."
+authors = [
+  { name = "Théo Nguyen", email = "theo.nguyen@aalto.fi" }
+]
+readme = "README.md"
+license = "MIT"
+dependencies = [
+  "pytest",
+  "jsonschema",
+  "pyyaml"
+]
+
+[tool.setuptools.packages.find]
+where = ["packages"]
+exclude = ["tests"]
+
+[tool.pytest.ini_options]
+addopts = "--maxfail=3 --disable-warnings"

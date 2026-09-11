@@ -1,0 +1,16 @@
+# Error Format Schema for Streaming-SAS
+
+ErrorFormat:
+  type: object
+  properties:
+    error_code:
+      type: string
+      description: "A short alphanumeric identifier for the error type."
+    message:
+      type: string
+      description: "Human-readable description of the error."
+    details:
+      type: object
+      description: "Optional details providing additional context for the error."
+      additionalProperties: true
+  required: ["error_code", "message"]

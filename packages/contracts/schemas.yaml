@@ -1,0 +1,77 @@
+# Core Contract Schemas for Streaming-SAS
+
+definitions:
+  TaskType:
+    type: string
+    enum: ["anonymize", "convert"]
+  Mode:
+    type: string
+    enum: ["streaming", "non_streaming"]
+  ReferenceAudio:
+    type: object
+    properties:
+      audio_data:
+        type: string
+        format: base64
+      sample_rate:
+        type: integer
+    required: ["audio_data", "sample_rate"]
+  VoiceProfileId:
+    type: string
+    description: "A unique identifier for a reusable voice profile."
+  AnonymizationParameters:
+    type: object
+    properties:
+      pitch_shift:
+        type: integer
+        description: "Degree of pitch adjustment."
+      voice_cloning_level:
+        type: integer
+        description: "Level of similarity to original voice."
+      noise_injection:
+        type: number
+        description: "Amount of noise to insert for anonymization."
+    required: ["pitch_shift", "voice_cloning_level"]
+
+schemas:
+  RunConfig:
+    type: object
+    properties:
+      task_type:
+        $ref: "#/definitions/TaskType"
+      mode:
+        $ref: "#/definitions/Mode"
+      reference_audio:
+        $ref: "#/definitions/ReferenceAudio"
+      voice_profile_id:
+        $ref: "#/definitions/VoiceProfileId"
+      anonymization_parameters:
+        $ref: "#/definitions/AnonymizationParameters"
+    oneOf:
+      - properties:
+          task_type:
+            enum: ["anonymize"]
+        required: ["anonymization_parameters"]
+      - properties:
+          task_type:
+            enum: ["convert"]
+          reference_audio:
+            $ref: "#/definitions/ReferenceAudio"
+        required:
+          - reference_audio
+    required: ["task_type", "mode"]
+
+  StreamingState:
+    type: string
+    enum: ["received", "processing", "cancelled", "completed", "failed"]
+
+  ErrorFormat:
+    type: object
+    properties:
+      error_code:
+        type: string
+      message:
+        type: string
+      details:
+        type: object
+    required: ["error_code", "message"]

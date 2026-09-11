@@ -1,0 +1,42 @@
+# Dependency directories
+node_modules/
+.venv/
+
+# Build artifacts
+build/
+.cache/
+dist/
+out/
+
+# Environment configuration
+.env
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+uv.lock
+
+# Large generated/binary assets
+*.log
+*.zip
+*.tar
+*.gz
+*.exe
+*.dll
+*.so
+*.dylib
+*.bin
+*.obj
+*.tmp
+*.bak
+generated/
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.iml
+
+# OS-specific files
+.DS_Store
+Thumbs.db

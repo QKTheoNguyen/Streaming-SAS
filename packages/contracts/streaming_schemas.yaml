@@ -1,0 +1,30 @@
+# Streaming-Related Schemas for Streaming-SAS
+
+StreamingSchemas:
+  type: object
+  properties:
+    session_id:
+      type: string
+      description: "Unique identifier for a streaming session."
+    chunk_sequence:
+      type: array
+      items:
+        type: integer
+      description: "Monotonically increasing sequence numbers for audio chunks."
+    processing_states:
+      type: array
+      items:
+        type: string
+        enum: ["received", "processing", "completed", "failed", "cancelled"]
+      description: "Possible processing states for each chunk or session."
+    buffer_constraints:
+      type: object
+      properties:
+        max_chunks_in_buffer:
+          type: integer
+          description: "Maximum chunks allowed in processing buffer."
+        max_latency_ms:
+          type: number
+          description: "Maximum allowable processing latency in milliseconds."
+      required: ["max_chunks_in_buffer", "max_latency_ms"]
+  required: ["session_id", "chunk_sequence", "processing_states"]
