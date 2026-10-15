@@ -19,6 +19,9 @@ definitions:
   VoiceProfileId:
     type: string
     description: "A unique identifier for a reusable voice profile."
+  ModelId:
+    type: string
+    description: "A unique identifier for a model."
   AnonymizationParameters:
     type: object
     properties:
@@ -41,6 +44,8 @@ schemas:
         $ref: "#/definitions/TaskType"
       mode:
         $ref: "#/definitions/Mode"
+      model_id:
+        $ref: "#/definitions/ModelId"
       reference_audio:
         $ref: "#/definitions/ReferenceAudio"
       voice_profile_id:

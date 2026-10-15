@@ -14,7 +14,17 @@ class MockProvider:
         return {
             "task_types": ["anonymize", "convert"],
             "modes": ["streaming", "non_streaming"],
-            "device": "cpu"
+            "device": "cpu",
+            "models": {
+                "anonymize": [
+                    {"id": "anon-model-1", "name": "Anonymizer 1"},
+                    {"id": "anon-model-2", "name": "Anonymizer 2"}
+                ],
+                "convert": [
+                    {"id": "vc-model-1", "name": "Voice Converter 1"},
+                    {"id": "vc-model-2", "name": "Voice Converter 2"}
+                ]
+            }
         }
 
     async def start_session(self, config):

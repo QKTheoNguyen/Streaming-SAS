@@ -39,22 +39,28 @@ async def start_session(config: Dict[str, Any] = Body(...)):
     Start a session by selecting a provider that matches the requested capabilities.
     :param config: Session configuration including `task_type`, `mode`, and `device`.
     """
-    try:
-        task_type = config["task_type"]
-        mode = config["mode"]
-        device = config["device"]
-    except KeyError:
-        raise HTTPException(
-            status_code=400,
-            detail="Request body must include 'task_type', 'mode', and 'device'."
-        )
-
-    try:
-        provider = await provider_registry.get_provider(
-            task_type=task_type, mode=mode, device=device
-        )
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    provider_name = config.get("provider_name")
+    if provider_name:
+        try:
+            provider = provider_registry.get_provider_by_name(provider_name)
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+    else:
+        try:
+            task_type = config["task_type"]
+            mode = config["mode"]
+            device = config.get("device", "cpu") # Default to CPU if not provided
+        except KeyError:
+            raise HTTPException(
+                status_code=400,
+                detail="Request body must include 'task_type' and 'mode'."
+            )
+        try:
+            provider = await provider_registry.get_provider(
+                task_type=task_type, mode=mode, device=device
+            )
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
 
     session_id = await provider.start_session(config)
     return {"status": "session_started", "session_id": session_id}

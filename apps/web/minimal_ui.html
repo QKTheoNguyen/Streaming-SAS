@@ -3,76 +3,400 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SAS Minimal UI</title>
+    <title>Speech Transformation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: #1a73e8;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        select, input[type="file"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+        }
+        .radio-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+        .task-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        .task-button {
+            flex-grow: 1;
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 600;
+            transition: background-color 0.2s, border-color 0.2s;
+        }
+        .task-button:hover {
+            background-color: #e9ecef;
+        }
+        .task-button.selected {
+            background-color: #e8f0fe;
+            border-color: #1a73e8;
+            color: #1a73e8;
+        }
+        .button {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: #1a73e8;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #155ab6;
+        }
+        .result-box {
+            margin-top: 2rem;
+            padding: 1rem;
+            background-color: #f0f0f0;
+            border-radius: 6px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
-    <h1>SAS Task Selection</h1>
+
+<div class="container">
+    <h1>Speech Transformation</h1>
 
     <form id="taskForm">
-        <label for="taskType">Task Type:</label>
-        <select id="taskType" name="taskType">
-            <option value="anonymize">Anonymize</option>
-            <option value="convert">Convert</option>
-        </select>
+        <div class="form-group">
+            <label>Task Type</label>
+            <div class="task-buttons">
+                <button type="button" class="task-button selected" data-task="anonymize">Anonymize</button>
+                <button type="button" class="task-button" data-task="convert">Voice Convert</button>
+            </div>
+            <input type="hidden" name="taskType" id="taskType" value="anonymize">
+        </div>
 
-        <label for="mode">Mode:</label>
-        <select id="mode" name="mode">
-            <option value="streaming">Streaming</option>
-            <option value="non_streaming">Non-Streaming</option>
-        </select>
+        <div class="form-group">
+            <label>Mode</label>
+             <div class="task-buttons">
+                <button type="button" class="task-button selected" data-mode="non_streaming">Non-Streaming</button>
+                <button type="button" class="task-button" data-mode="streaming">Streaming</button>
+            </div>
+            <input type="hidden" name="mode" id="mode" value="non_streaming">
+        </div>
 
-        <label for="sourceAudio">Source Audio:</label>
-        <input type="file" id="sourceAudio" name="sourceAudio" accept="audio/*" required>
+        <div class="form-group">
+            <label for="providerName">Provider</label>
+            <select id="providerName" name="providerName" required>
+                <!-- Options will be populated dynamically -->
+            </select>
+        </div>
 
-        <label for="targetAudio">Target Audio (only for Convert):</label>
-        <input type="file" id="targetAudio" name="targetAudio" accept="audio/*">
+        <div class="form-group">
+            <label for="modelId">Model</label>
+            <select id="modelId" name="modelId" required>
+                <!-- Options will be populated dynamically -->
+            </select>
+        </div>
 
-        <button type="submit">Submit Task</button>
+        <div class="form-group">
+            <label for="sourceAudio">Source Audio</label>
+            <input type="file" id="sourceAudio" name="sourceAudio" accept="audio/*" required>
+        </div>
+
+        <div id="target-audio-group" class="form-group hidden">
+            <label for="targetAudio">Target Voice (for Conversion)</label>
+            <input type="file" id="targetAudio" name="targetAudio" accept="audio/*">
+        </div>
+
+        <button type="submit" class="button">Process Audio</button>
     </form>
 
-    <div id="result">
+    <div id="result" class="result-box hidden">
         <h2>Result</h2>
-        <p id="output"></p>
+        <audio id="resultAudio" controls></audio>
+        <pre id="resultData"></pre>
     </div>
+</div>
 
-    <script>
-        const taskForm = document.getElementById('taskForm');
-        const resultOutput = document.getElementById('output');
+<script>
+    const taskForm = document.getElementById('taskForm');
+    const targetAudioGroup = document.getElementById('target-audio-group');
+    const resultDiv = document.getElementById('result');
+    const resultData = document.getElementById('resultData');
+    const resultAudio = document.getElementById('resultAudio');
+    const modelIdSelect = document.getElementById('modelId');
+    const providerNameSelect = document.getElementById('providerName');
 
-        taskForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
+    let providersCache = {};
 
-            const formData = new FormData(taskForm);
+    async function fetchProviders() {
+        try {
+            const response = await fetch('/providers');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            providersCache = await response.json();
+            providerNameSelect.innerHTML = '';
+            for (const name in providersCache) {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                providerNameSelect.appendChild(option);
+            }
+            // Trigger model update for the initially selected provider and task
+            updateModels();
+        } catch (error) {
+            console.error('Fetch error:', error);
+        }
+    }
 
-            const taskType = formData.get('taskType');
-             const providerName = "mock_provider"; // Hardcoded for now, replace with dynamic selection if needed.
+    function updateModels() {
+        const selectedProvider = providerNameSelect.value;
+        const selectedTask = taskTypeInput.value;
+        const provider = providersCache[selectedProvider];
 
-            const mode = formData.get('mode');
-            const sourceAudio = formData.get('sourceAudio');
-            const targetAudio = formData.get('targetAudio');
+        const modelList = (provider && provider.models && provider.models[selectedTask]) ? provider.models[selectedTask] : [];
+        
+        modelIdSelect.innerHTML = '';
+        modelList.forEach(model => {
+            const option = document.createElement('option');
+            option.value = model.id;
+            option.textContent = model.name;
+            modelIdSelect.appendChild(option);
+        });
+    }
 
-            resultOutput.innerText = 'Processing task...';
+    const taskButtons = document.querySelectorAll('.task-button[data-task]');
+    const taskTypeInput = document.getElementById('taskType');
 
-            try {
-                const response = await fetch('/sessions/start', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                         provider_name: providerName,
-                        taskType,
-                        mode,
-                        sourceAudio: null, // placeholder, audio upload not integrated yet
-                        targetAudio: targetAudio || null,
-                    }),
-                });
+    taskButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            taskButtons.forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
 
-                const result = await response.json();
-                resultOutput.innerText = JSON.stringify(result);
-            } catch (error) {
-                resultOutput.innerText = `Error: ${error.message}`;
+            const task = button.dataset.task;
+            taskTypeInput.value = task;
+            updateModels();
+
+            if (task === 'convert') {
+                targetAudioGroup.classList.remove('hidden');
+            } else {
+                targetAudioGroup.classList.add('hidden');
             }
         });
-    </script>
+    });
+
+    const modeButtons = document.querySelectorAll('.task-button[data-mode]');
+    const modeInput = document.getElementById('mode');
+
+    modeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            modeButtons.forEach(btn => btn.classList.remove('selected'));
+            button.classList.add('selected');
+            const mode = button.dataset.mode;
+            modeInput.value = mode;
+        });
+    });
+
+    providerNameSelect.addEventListener('change', updateModels);
+
+    fetchProviders();
+
+    taskForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        resultDiv.classList.remove('hidden');
+        resultData.textContent = 'Processing...';
+
+        const formData = new FormData(taskForm);
+        const providerName = formData.get('providerName');
+        const taskType = formData.get('taskType');
+        const mode = formData.get('mode');
+        const modelId = formData.get('modelId');
+        const sourceAudioFile = formData.get('sourceAudio');
+
+        const sessionConfig = {
+            provider_name: providerName,
+            task_type: taskType,
+            mode: mode,
+            model_id: modelId
+        };
+        
+        try {
+            // 1. Start the session
+            const sessionResponse = await fetch('/sessions/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(sessionConfig),
+            });
+
+            if (!sessionResponse.ok) {
+                const errorBody = await sessionResponse.text();
+                throw new Error(`Session start failed: ${sessionResponse.status} ${errorBody}`);
+            }
+
+            const sessionData = await sessionResponse.json();
+            const sessionId = sessionData.session_id;
+
+            if (!sessionId) {
+                throw new Error("Failed to get a valid session ID.");
+            }
+            
+            resultData.textContent = `Session started: ${sessionId}. Now processing...`;
+
+            // 2. Process the audio
+            if (mode === 'non_streaming') {
+                if (!sourceAudioFile || sourceAudioFile.size === 0) {
+                    throw new Error("Source audio file is missing or empty.");
+                }
+
+                const processResponse = await fetch(`/sessions/${sessionId}/process`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'audio/wav' },
+                    body: sourceAudioFile
+                });
+
+                if (!processResponse.ok) {
+                     const errorBody = await processResponse.text();
+                    throw new Error(`Processing failed: ${processResponse.status} ${errorBody}`);
+                }
+                
+                const processedAudioBlob = await processResponse.blob();
+                const processedAudioUrl = URL.createObjectURL(processedAudioBlob);
+                resultAudio.src = processedAudioUrl;
+                resultData.textContent = 'Processing complete.';
+            } else { // Streaming mode
+                if (!sourceAudioFile || sourceAudioFile.size === 0) {
+                    throw new Error("Source audio file is missing or empty.");
+                }
+
+                const socket = new WebSocket(`ws://${window.location.host}/sessions/${sessionId}`);
+                let sequenceId = 0;
+                const receivedChunks = [];
+
+                socket.onopen = () => {
+                    resultData.textContent = 'WebSocket connected. Slicing and streaming audio...';
+                    const chunkSize = 4096; // 4KB chunks
+                    let offset = 0;
+
+                    const reader = new FileReader();
+
+                    function readAndSend() {
+                        if (offset >= sourceAudioFile.size) {
+                            socket.send(JSON.stringify({ "status": "end_of_stream", "sequence_id": sequenceId }));
+                            return;
+                        }
+                        
+                        const slice = sourceAudioFile.slice(offset, offset + chunkSize);
+                        reader.readAsBinaryString(slice);
+                    }
+
+                    reader.onload = (e) => {
+                        if (e.target.result) {
+                            const chunk = e.target.result;
+                            socket.send(JSON.stringify({
+                                audio: chunk,
+                                sequence_id: sequenceId++
+                            }));
+                            offset += chunk.length;
+                            readAndSend();
+                        }
+                    };
+
+                    reader.onerror = (e) => {
+                        console.error("FileReader error:", e);
+                        resultData.textContent = `FileReader Error: ${e.toString()}`;
+                        socket.close();
+                    };
+                    
+                    readAndSend();
+                };
+
+                socket.onmessage = (event) => {
+                    const result = JSON.parse(event.data);
+                    if (result.error) {
+                        throw new Error(result.error);
+                    }
+                    if (result.audio) {
+                        const byteString = result.audio;
+                        const bytes = new Uint8Array(byteString.length);
+                        for (let i = 0; i < byteString.length; i++) {
+                            bytes[i] = byteString.charCodeAt(i);
+                        }
+                        receivedChunks.push(bytes);
+                        resultData.textContent = `Received chunk ${result.sequence_id}...`;
+                    }
+                };
+
+                socket.onclose = (event) => {
+                    if (event.wasClean) {
+                        resultData.textContent = 'Streaming complete. Reconstructing audio...';
+                        if (receivedChunks.length > 0) {
+                            const fullAudio = new Blob(receivedChunks, { type: 'audio/wav' });
+                            const processedAudioUrl = URL.createObjectURL(fullAudio);
+                            resultAudio.src = processedAudioUrl;
+                            resultData.textContent = 'Audio processed and loaded.';
+                        } else {
+                             resultData.textContent = 'Streaming finished, but no audio data was received.';
+                        }
+                    } else {
+                        resultData.textContent = `WebSocket closed unexpectedly. Code: ${event.code}, Reason: ${event.reason || 'No reason given'}`;
+                    }
+                };
+
+                socket.onerror = (error) => {
+                    console.error('WebSocket Error:', error);
+                    resultData.textContent = `WebSocket Error. See console for details.`;
+                };
+            }
+
+        } catch (error) {
+            resultData.textContent = `Error: ${error.message}`;
+            console.error('Fetch error:', error);
+        }
+    });
+</script>
+
 </body>
 </html>

@@ -13,6 +13,18 @@ class ProviderRegistry:
             "remote": RemoteProvider(settings={})
         }
 
+    def get_provider_by_name(self, provider_name: str):
+        """
+        Retrieve a provider by its name.
+        :param provider_name: The name of the provider.
+        :return: A provider instance.
+        :raises ValueError: If the provider is not found.
+        """
+        provider = self.providers.get(provider_name)
+        if not provider:
+            raise ValueError(f"Provider '{provider_name}' not found.")
+        return provider
+
     async def get_provider(self, task_type: str, mode: str, device: str):
         """
         Retrieve a provider that matches the required capabilities.
