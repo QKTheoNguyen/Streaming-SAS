@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAS Minimal UI</title>
+</head>
+<body>
+    <h1>SAS Task Selection</h1>
+
+    <form id="taskForm">
+        <label for="taskType">Task Type:</label>
+        <select id="taskType" name="taskType">
+            <option value="anonymize">Anonymize</option>
+            <option value="convert">Convert</option>
+        </select>
+
+        <label for="mode">Mode:</label>
+        <select id="mode" name="mode">
+            <option value="streaming">Streaming</option>
+            <option value="non_streaming">Non-Streaming</option>
+        </select>
+
+        <label for="sourceAudio">Source Audio:</label>
+        <input type="file" id="sourceAudio" name="sourceAudio" accept="audio/*" required>
+
+        <label for="targetAudio">Target Audio (only for Convert):</label>
+        <input type="file" id="targetAudio" name="targetAudio" accept="audio/*">
+
+        <button type="submit">Submit Task</button>
+    </form>
+
+    <div id="result">
+        <h2>Result</h2>
+        <p id="output"></p>
+    </div>
+
+    <script>
+        const taskForm = document.getElementById('taskForm');
+        const resultOutput = document.getElementById('output');
+
+        taskForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(taskForm);
+
+            const taskType = formData.get('taskType');
+             const providerName = "mock_provider"; // Hardcoded for now, replace with dynamic selection if needed.
+
+            const mode = formData.get('mode');
+            const sourceAudio = formData.get('sourceAudio');
+            const targetAudio = formData.get('targetAudio');
+
+            resultOutput.innerText = 'Processing task...';
+
+            try {
+                const response = await fetch('/sessions/start', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                         provider_name: providerName,
+                        taskType,
+                        mode,
+                        sourceAudio: null, // placeholder, audio upload not integrated yet
+                        targetAudio: targetAudio || null,
+                    }),
+                });
+
+                const result = await response.json();
+                resultOutput.innerText = JSON.stringify(result);
+            } catch (error) {
+                resultOutput.innerText = `Error: ${error.message}`;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -14,7 +14,14 @@ license = "MIT"
 dependencies = [
   "pytest",
   "jsonschema",
-  "pyyaml"
+  "pyyaml",
+  "fastapi>=0.143.0",
+  "uvicorn[standard]>=0.54.0",
+  "sqlalchemy>=2.1.4",
+  "requests>=2.34.2",
+  "python-multipart>=0.0.32",
+  "httpx>=0.28.1",
+  "numpy>=2.5.4",
 ]
 
 [tool.setuptools.packages.find]
@@ -23,3 +30,9 @@ exclude = ["tests"]
 
 [tool.pytest.ini_options]
 addopts = "--maxfail=3 --disable-warnings"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest-asyncio>=1.4.0",
+]
